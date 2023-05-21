@@ -1,10 +1,23 @@
-import React from "react";
-import "./App.css";
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import User from './components/userPage/user';
+import Login from './components/loginPage/login';
+import './App.css';
+import { useEffect } from 'react';
 
 const App = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!sessionStorage.name)
+      navigate('/')
+  }, [navigate])
 
   return <>
-    <h1>Hello I am React</h1>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/user/:id" element={<User />} />
+    </Routes>
   </>
 }
+
 export default App;
