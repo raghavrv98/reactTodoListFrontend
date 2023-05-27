@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import "./navbar.css"
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const Navbar = (props) => {
 
@@ -9,6 +9,7 @@ const Navbar = (props) => {
   const navigate = useNavigate();
   const [payload, updatePayload] = useState({ name: "", password: "" });
   const [isPasswordShown, updateIsPasswordShown] = useState(false);
+  const [isLoading, updateIsLoading] = useState(false);
 
   const logoutHandler = () => {
     sessionStorage.clear();
@@ -17,31 +18,36 @@ const Navbar = (props) => {
 
   const updateSubmitHandler = (event) => {
     event.preventDefault();
+    updateIsLoading(true);
     const url = `${window.API_URL}/user/${id}`;
     axios.patch(url, payload)
       .then((res) => {
+        updateIsLoading(false);
         if (res?.status === 200) {
-          sessionStorage.setItem("name", res.data.data.name);
-          sessionStorage.setItem("password", res.data.data.password);
           alert(res?.data?.msg)
-          updatePayload(res.data.data)
+          fetchData();
         }
         else {
           alert(res?.data?.msg)
         }
       })
       .catch((err) => {
+        updateIsLoading(false);
         alert(err?.response?.data?.msg)
       });
   }
 
-  const editDataOnModalHandler = () => {
+  const fetchData = () => {
+    updateIsLoading(true);
     let url = window.API_URL + `/user/${id}`;
     axios.get(url)
       .then((res) => {
+        updateIsLoading(false);
         updatePayload(res.data.data)
+        sessionStorage.setItem("name", res.data.data.name)
       })
       .catch((err) => {
+        updateIsLoading(false);
         alert(err?.response?.data?.msg)
       });
   }
@@ -60,19 +66,26 @@ const Navbar = (props) => {
     updateIsPasswordShown(checked);
   }
 
-  const deleteHandler = (event) => {
+  const deleteUserHandler = (event) => {
+    updateIsLoading(true);
     event.preventDefault();
     let url = window.API_URL + `/user/${id}`;
     axios.patch(url, { "type": "delete" })
       .then((res) => {
+        updateIsLoading(false);
         alert(res.data.msg);
         sessionStorage.clear();
         navigate('/');
       })
       .catch((err) => {
+        updateIsLoading(false);
         alert(err?.response?.data?.msg)
       });
   }
+
+  useEffect(() => {
+    props.rerenderComponentOnChange();
+  },[sessionStorage.name])
 
   return <>
     <nav className="navbar navbar-expand-lg bg-light">
@@ -88,7 +101,7 @@ const Navbar = (props) => {
                 Profile
               </p>
               <ul className="dropdown-menu">
-                <li><p className="dropdown-item" onClick={editDataOnModalHandler} data-bs-toggle="modal" data-bs-target="#editModal">Edit</p></li>
+                <li><p className="dropdown-item" onClick={fetchData} data-bs-toggle="modal" data-bs-target="#editModal">Edit</p></li>
                 <li><p className="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</p></li>
               </ul>
             </li>
@@ -110,6 +123,7 @@ const Navbar = (props) => {
           </div>
           <form onSubmit={updateSubmitHandler}>
             <div className="modal-body">
+              {isLoading && <div className="loader-overlay"><div className="loader"></div></div>}
               <div className="mb-3">
                 <label htmlFor="name" className="form-label">
                   Name
@@ -141,7 +155,7 @@ const Navbar = (props) => {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="submit" className="btn btn-primary">Save changes</button>
+              <button type="submit" className="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
             </div>
           </form>
         </div>
@@ -154,7 +168,7 @@ const Navbar = (props) => {
             <h1 className="modal-title fs-5" id="deleteModalLabel">Delete Profile</h1>
             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form onSubmit={deleteHandler}>
+          <form onSubmit={deleteUserHandler}>
             <p>Are you sure you want to delete?</p>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
