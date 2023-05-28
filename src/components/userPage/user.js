@@ -73,11 +73,13 @@ const User = (props) => {
   const indexHandler = (event, id, type) => {
     event.preventDefault()
     const newUserDetails = { ...userDetails };
-    updatedStateIndex(newUserDetails?.notes?.findIndex(val => val.id === id));
-    updatedType(type);
+    const index = newUserDetails?.notes?.findIndex(val => val.id === id);
+    updatedStateIndex(index);
     updatedUniqueId(id);
+    updatedType(type);
     if (type === "completed") {
-      onChangeCompletedHandler(event)
+      newUserDetails.notes[index].isCompleted = !newUserDetails.notes[index].isCompleted;
+      updatedUserDetails(newUserDetails);
       updateSubmitHandler(event, "completed")
     }
   }
@@ -86,13 +88,6 @@ const User = (props) => {
     event.preventDefault();
     const newUserDetails = { ...userDetails };
     newUserDetails.notes[stateIndex].data = event.target.value;
-    updatedUserDetails(newUserDetails);
-  }
-
-  const onChangeCompletedHandler = (event) => {
-    event.preventDefault();
-    const newUserDetails = { ...userDetails };
-    newUserDetails.notes[stateIndex].isCompleted = !newUserDetails.notes[stateIndex].isCompleted;
     updatedUserDetails(newUserDetails);
   }
 
@@ -191,7 +186,7 @@ const User = (props) => {
             data-bs-placement="top"
             onClick={(event) => indexHandler(event, val.id, "completed")}
             title="Done">
-            {val.isCompleted ? <i class="fa fa-times" aria-hidden="true"></i> : <i className="fa fa-check-square-o" aria-hidden="true"></i>}
+            {val.isCompleted ? <i className="fa fa-times" aria-hidden="true"></i> : <i className="fa fa-check-square-o" aria-hidden="true"></i>}
           </button>
 
         </div>
